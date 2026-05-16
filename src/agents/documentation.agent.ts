@@ -6,7 +6,9 @@
 
 import { BaseAgent, AgentContext, AgentResult } from "./base.agent";
 import { openaiService } from "@/services/openai.service";
+import { geminiService } from "@/services/gemini.service";
 import { githubService } from "@/services/github.service";
+import { config } from "@/lib/config";
 
 export interface DocumentationResult {
   readme: string;
@@ -25,16 +27,24 @@ export class DocumentationAgent extends BaseAgent {
     try {
       const { repositoryId, repositoryName, language } = context;
 
+      this.logger.info(`Starting documentation generation`, {
+        repositoryId,
+        repositoryName,
+        language,
+      });
+
       // Parse GitHub URL to get owner and repo
       const parsed = githubService.parseGitHubUrl(repositoryName);
       if (!parsed) {
+        this.logger.error(`Failed to parse repository name: ${repositoryName}`);
         return {
           success: false,
-          error: "Invalid repository name format",
+          error: `Invalid repository name format: "${repositoryName}". Expected format: "owner/repo" or full GitHub URL`,
         };
       }
 
       const { owner, repo } = parsed;
+      this.logger.info(`Parsed repository: ${owner}/${repo}`);
 
       // Get repository information
       const repoInfo = await githubService.getRepository(owner, repo);
@@ -121,7 +131,9 @@ Include:
 
 Format in Markdown.`;
 
-    const result = await openaiService.chatCompletion(
+    // Use Gemini if configured, otherwise fall back to OpenAI
+    const aiService = config.isGeminiConfigured ? geminiService : openaiService;
+    const result = await aiService.chatCompletion(
       [{ role: "user", content: prompt }],
       { temperature: 0.4, maxTokens: 2000 }
     );
@@ -167,7 +179,9 @@ Include:
 
 Format in Markdown.`;
 
-    const result = await openaiService.chatCompletion(
+    // Use Gemini if configured, otherwise fall back to OpenAI
+    const aiService = config.isGeminiConfigured ? geminiService : openaiService;
+    const result = await aiService.chatCompletion(
       [{ role: "user", content: prompt }],
       { temperature: 0.3, maxTokens: 1500 }
     );
@@ -220,7 +234,9 @@ Include:
 
 Format in Markdown with diagrams described in text.`;
 
-    const result = await openaiService.chatCompletion(
+    // Use Gemini if configured, otherwise fall back to OpenAI
+    const aiService = config.isGeminiConfigured ? geminiService : openaiService;
+    const result = await aiService.chatCompletion(
       [{ role: "user", content: prompt }],
       { temperature: 0.4, maxTokens: 2000 }
     );
@@ -243,7 +259,9 @@ Format in Markdown with diagrams described in text.`;
       const batchDocs = await Promise.all(
         batch.map(async (file) => {
           try {
-            const doc = await openaiService.generateDocumentation(
+            // Use Gemini if configured, otherwise fall back to OpenAI
+            const aiService = config.isGeminiConfigured ? geminiService : openaiService;
+            const doc = await aiService.generateDocumentation(
               file.content,
               language
             );

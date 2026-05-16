@@ -20,6 +20,10 @@ const envSchema = z.object({
   // OpenAI
   OPENAI_API_KEY: z.string().optional(),
   
+  // Google Gemini
+  GEMINI_API_KEY: z.string().optional(),
+  GOOGLE_API_KEY: z.string().optional(),
+  
   // GitHub
   GITHUB_TOKEN: z.string().optional(),
   GITHUB_CLIENT_ID: z.string().optional(),
@@ -123,6 +127,26 @@ export class Config {
 
   get isOpenAIConfigured(): boolean {
     return !!this.env.OPENAI_API_KEY;
+  }
+
+  // Google Gemini
+  get geminiApiKey(): string | undefined {
+    return this.env.GEMINI_API_KEY || this.env.GOOGLE_API_KEY;
+  }
+
+  get isGeminiConfigured(): boolean {
+    return !!(this.env.GEMINI_API_KEY || this.env.GOOGLE_API_KEY);
+  }
+
+  // AI Service (checks both OpenAI and Gemini)
+  get isAIConfigured(): boolean {
+    return this.isOpenAIConfigured || this.isGeminiConfigured;
+  }
+
+  get aiProvider(): "openai" | "gemini" | null {
+    if (this.isGeminiConfigured) return "gemini";
+    if (this.isOpenAIConfigured) return "openai";
+    return null;
   }
 
   // GitHub
@@ -246,7 +270,8 @@ export class Config {
     return {
       database: this.isDatabaseConfigured,
       authentication: this.isSupabaseConfigured,
-      aiAnalysis: this.isOpenAIConfigured,
+      aiAnalysis: this.isAIConfigured,
+      aiProvider: this.aiProvider,
       githubIntegration: this.isGitHubConfigured,
       githubOAuth: this.isGitHubOAuthConfigured,
       vectorSearch: this.isPineconeConfigured || this.isDatabaseConfigured, // pgvector fallback
@@ -264,6 +289,7 @@ export class Config {
     console.log(`  Database: ${this.features.database ? "✅" : "❌ (using mock data)"}`);
     console.log(`  Authentication: ${this.features.authentication ? "✅" : "❌ (using mock auth)"}`);
     console.log(`  AI Analysis: ${this.features.aiAnalysis ? "✅" : "❌"}`);
+    console.log(`  AI Provider: ${this.features.aiProvider || "none"}`);
     console.log(`  GitHub Integration: ${this.features.githubIntegration ? "✅" : "❌"}`);
     console.log(`  GitHub OAuth: ${this.features.githubOAuth ? "✅" : "❌"}`);
     console.log(`  Vector Search: ${this.features.vectorSearch ? "✅" : "❌"}`);

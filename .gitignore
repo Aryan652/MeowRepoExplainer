@@ -50,3 +50,5 @@ run-setup.js
 # setup-database.sql
 
 .dev.vars
+
+src/agents/remove.md

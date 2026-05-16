@@ -1,14 +1,15 @@
 /**
- * src/services/openai.service.ts
+ * src/services/gemini.service.ts
  * 
- * OpenAI API integration for embeddings and AI-powered analysis.
+ * Google Gemini API integration for AI-powered analysis.
+ * Compatible interface with OpenAI service for easy migration.
  */
 
-import OpenAI from "openai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import { config } from "@/lib/config";
 import { createLogger } from "@/lib/logger";
 
-const logger = createLogger("OpenAIService");
+const logger = createLogger("GeminiService");
 
 export interface EmbeddingResult {
   embedding: number[];
@@ -29,25 +30,24 @@ export interface ChatCompletionResult {
   };
 }
 
-export class OpenAIService {
-  private client: OpenAI | null = null;
+export class GeminiService {
+  private client: GoogleGenerativeAI | null = null;
   private isConfigured: boolean;
 
   constructor() {
-    this.isConfigured = config.isOpenAIConfigured;
+    const apiKey = process.env["GEMINI_API_KEY"] || process.env["GOOGLE_API_KEY"];
+    this.isConfigured = !!apiKey;
     
-    if (this.isConfigured && config.openaiApiKey) {
-      this.client = new OpenAI({
-        apiKey: config.openaiApiKey,
-      });
-      logger.info("OpenAI service initialized");
+    if (this.isConfigured && apiKey) {
+      this.client = new GoogleGenerativeAI(apiKey);
+      logger.info("Gemini service initialized");
     } else {
-      logger.warn("OpenAI API key not configured - AI features will be disabled");
+      logger.warn("Gemini API key not configured - AI features will be disabled");
     }
   }
 
   /**
-   * Check if OpenAI is configured
+   * Check if Gemini is configured
    */
   isAvailable(): boolean {
     return this.isConfigured && this.client !== null;
@@ -58,25 +58,22 @@ export class OpenAIService {
    */
   async generateEmbedding(text: string): Promise<EmbeddingResult> {
     if (!this.client) {
-      throw new Error("OpenAI client not configured");
+      throw new Error("Gemini client not configured");
     }
 
     try {
       logger.debug("Generating embedding", { textLength: text.length });
 
-      const response = await this.client.embeddings.create({
-        model: "text-embedding-3-small",
-        input: text,
-        encoding_format: "float",
-      });
-
-      const embedding = response.data[0].embedding;
-      const tokens = response.usage.total_tokens;
+      const model = this.client.getGenerativeModel({ model: "text-embedding-004" });
+      const result = await model.embedContent(text);
+      
+      const embedding = result.embedding.values;
+      const tokens = this.estimateTokenCount(text);
 
       logger.debug("Embedding generated", { tokens, dimensions: embedding.length });
 
       return {
-        embedding,
+        embedding: Array.from(embedding),
         tokens,
       };
     } catch (error) {
@@ -90,26 +87,25 @@ export class OpenAIService {
    */
   async generateEmbeddingsBatch(texts: string[]): Promise<EmbeddingResult[]> {
     if (!this.client) {
-      throw new Error("OpenAI client not configured");
+      throw new Error("Gemini client not configured");
     }
 
     try {
       logger.info(`Generating embeddings for ${texts.length} texts`);
 
-      const response = await this.client.embeddings.create({
-        model: "text-embedding-3-small",
-        input: texts,
-        encoding_format: "float",
-      });
+      const model = this.client.getGenerativeModel({ model: "text-embedding-004" });
+      
+      const results = await Promise.all(
+        texts.map(async (text) => {
+          const result = await model.embedContent(text);
+          return {
+            embedding: Array.from(result.embedding.values),
+            tokens: this.estimateTokenCount(text),
+          };
+        })
+      );
 
-      const results = response.data.map((item) => ({
-        embedding: item.embedding,
-        tokens: 0, // Individual token count not available in batch
-      }));
-
-      logger.info(`Generated ${results.length} embeddings`, {
-        totalTokens: response.usage.total_tokens,
-      });
+      logger.info(`Generated ${results.length} embeddings`);
 
       return results;
     } catch (error) {
@@ -119,7 +115,33 @@ export class OpenAIService {
   }
 
   /**
-   * Chat completion with GPT-4
+   * Convert ChatMessage format to Gemini format
+   */
+  private convertMessages(messages: ChatMessage[]): { role: string; parts: { text: string }[] }[] {
+    const geminiMessages: { role: string; parts: { text: string }[] }[] = [];
+    let systemPrompt = "";
+
+    for (const msg of messages) {
+      if (msg.role === "system") {
+        systemPrompt = msg.content;
+      } else {
+        geminiMessages.push({
+          role: msg.role === "assistant" ? "model" : "user",
+          parts: [{ text: msg.content }],
+        });
+      }
+    }
+
+    // Prepend system prompt to first user message if exists
+    if (systemPrompt && geminiMessages.length > 0 && geminiMessages[0].role === "user") {
+      geminiMessages[0].parts[0].text = `${systemPrompt}\n\n${geminiMessages[0].parts[0].text}`;
+    }
+
+    return geminiMessages;
+  }
+
+  /**
+   * Chat completion with Gemini
    */
   async chatCompletion(
     messages: ChatMessage[],
@@ -131,12 +153,12 @@ export class OpenAIService {
     } = {}
   ): Promise<ChatCompletionResult> {
     if (!this.client) {
-      throw new Error("OpenAI client not configured");
+      throw new Error("Gemini client not configured");
     }
 
     try {
       const {
-        model = "Gemini 2.5 Flash", // Updated to current model (faster and cheaper)
+        model = "gemini-2.5-flash",
         temperature = 0.7,
         maxTokens = 2000,
       } = options;
@@ -146,18 +168,38 @@ export class OpenAIService {
         messageCount: messages.length,
       });
 
-      const response = await this.client.chat.completions.create({
+      const geminiModel = this.client.getGenerativeModel({
         model,
-        messages,
-        temperature,
-        max_tokens: maxTokens,
+        generationConfig: {
+          temperature,
+          maxOutputTokens: maxTokens,
+        },
       });
 
-      const content = response.choices[0].message.content || "";
+      const geminiMessages = this.convertMessages(messages);
+      
+      // Start chat with history (all messages except the last one)
+      const history = geminiMessages.slice(0, -1);
+      const lastMessage = geminiMessages[geminiMessages.length - 1];
+
+      const chat = geminiModel.startChat({
+        history,
+      });
+
+      const result = await chat.sendMessage(lastMessage.parts[0].text);
+      const response = result.response;
+      const content = response.text();
+
+      // Estimate tokens (Gemini doesn't provide exact counts in free tier)
+      const promptTokens = this.estimateTokenCount(
+        messages.map((m) => m.content).join(" ")
+      );
+      const completionTokens = this.estimateTokenCount(content);
+
       const tokens = {
-        prompt: response.usage?.prompt_tokens || 0,
-        completion: response.usage?.completion_tokens || 0,
-        total: response.usage?.total_tokens || 0,
+        prompt: promptTokens,
+        completion: completionTokens,
+        total: promptTokens + completionTokens,
       };
 
       logger.debug("Chat completion response", { tokens });
@@ -184,12 +226,12 @@ export class OpenAIService {
     } = {}
   ): AsyncGenerator<string, void, unknown> {
     if (!this.client) {
-      throw new Error("OpenAI client not configured");
+      throw new Error("Gemini client not configured");
     }
 
     try {
       const {
-        model = "Gemini 2.5 Flash", // Updated to current model (faster and cheaper)
+        model = "gemini-2.5-flash",
         temperature = 0.7,
         maxTokens = 2000,
       } = options;
@@ -199,18 +241,28 @@ export class OpenAIService {
         messageCount: messages.length,
       });
 
-      const stream = await this.client.chat.completions.create({
+      const geminiModel = this.client.getGenerativeModel({
         model,
-        messages,
-        temperature,
-        max_tokens: maxTokens,
-        stream: true,
+        generationConfig: {
+          temperature,
+          maxOutputTokens: maxTokens,
+        },
       });
 
-      for await (const chunk of stream) {
-        const content = chunk.choices[0]?.delta?.content;
-        if (content) {
-          yield content;
+      const geminiMessages = this.convertMessages(messages);
+      const history = geminiMessages.slice(0, -1);
+      const lastMessage = geminiMessages[geminiMessages.length - 1];
+
+      const chat = geminiModel.startChat({
+        history,
+      });
+
+      const result = await chat.sendMessageStream(lastMessage.parts[0].text);
+
+      for await (const chunk of result.stream) {
+        const text = chunk.text();
+        if (text) {
+          yield text;
         }
       }
 
@@ -396,6 +448,6 @@ Use appropriate testing framework for ${language}.`,
 }
 
 // Export singleton instance
-export const openaiService = new OpenAIService();
+export const geminiService = new GeminiService();
 
 // Made with Bob

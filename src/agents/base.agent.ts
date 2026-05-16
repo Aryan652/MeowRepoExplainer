@@ -6,6 +6,8 @@
 
 import { createLogger, Logger } from "@/lib/logger";
 import { openaiService } from "@/services/openai.service";
+import { geminiService } from "@/services/gemini.service";
+import { config } from "@/lib/config";
 
 export interface AgentContext {
   repositoryId: string;
@@ -44,8 +46,10 @@ export abstract class BaseAgent {
    * Validate that the agent can run
    */
   protected validatePrerequisites(): void {
-    if (!openaiService.isAvailable()) {
-      throw new Error("OpenAI service is not configured");
+    // Check if either AI service is available
+    const hasAI = geminiService.isAvailable() || openaiService.isAvailable();
+    if (!hasAI) {
+      throw new Error("No AI service is configured. Please set GEMINI_API_KEY or OPENAI_API_KEY");
     }
   }
 
