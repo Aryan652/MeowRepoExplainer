@@ -1,6 +1,7 @@
 import { createFileRoute, Link, Outlet, useParams } from "@tanstack/react-router";
 import { ArrowLeft, MessageSquare, FileText, Network, AlertTriangle, LayoutDashboard } from "lucide-react";
 import { getRepo } from "@/lib/mock-data";
+import { useRequireAuth } from "@/hooks/useRequireAuth";
 
 export const Route = createFileRoute("/repo/$repoId")({
   component: RepoLayout,
@@ -21,8 +22,11 @@ const tabs = [
 ] as const;
 
 function RepoLayout() {
+  const authed = useRequireAuth();
   const { repoId } = useParams({ from: "/repo/$repoId" });
   const repo = getRepo(repoId);
+
+  if (!authed) return null;
 
   return (
     <div className="pt-28 pb-20 px-6">

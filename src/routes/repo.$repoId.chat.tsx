@@ -1,6 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useParams } from "@tanstack/react-router";
 import { useState } from "react";
-import { Send, Sparkles } from "lucide-react";
+import { Send, Sparkles, Loader2 } from "lucide-react";
+import { useSemanticSearch } from "@/hooks/useSearch";
 
 export const Route = createFileRoute("/repo/$repoId/chat")({
   component: ChatPage,
@@ -25,20 +26,33 @@ const templates = [
 ];
 
 function ChatPage() {
+  const { repoId } = useParams({ from: "/repo/$repoId" });
   const [msgs, setMsgs] = useState<Msg[]>(initial);
   const [input, setInput] = useState("");
+  const search = useSemanticSearch();
 
-  const send = (text: string) => {
-    if (!text.trim()) return;
+  const send = async (text: string) => {
+    if (!text.trim() || search.isPending) return;
     setMsgs((m) => [...m, { role: "user", text }]);
     setInput("");
-    setTimeout(() => {
+
+    try {
+      const results = await search.mutateAsync({ repoId, query: text, limit: 3 });
+      
+      const cites = results.map(r => `${r.filePath}${r.functionName ? `:${r.functionName}` : ''}`);
+      const aiText = results.length > 0
+        ? `Based on the repository context, here are the most relevant code snippets I found for your query. The primary matches are in ${results[0].filePath}.`
+        : "I couldn't find any directly relevant code snippets for your query in the current index.";
+
       setMsgs((m) => [...m, {
         role: "ai",
-        text: "Based on the indexed code, the relevant entry points are listed below. Click a citation to open it in the source view.",
-        cites: ["src/server.ts:24", "src/routes/payment.ts:88"],
+        text: aiText,
+        cites,
       }]);
-    }, 700);
+    } catch (err) {
+      console.error(err);
+      setMsgs((m) => [...m, { role: "ai", text: "Sorry, I encountered an error searching the repository." }]);
+    }
   };
 
   return (
@@ -82,8 +96,8 @@ function ChatPage() {
             placeholder="Ask anything about this repository…"
             className="flex-1 glass rounded-xl px-4 py-2.5 text-sm focus:outline-none"
           />
-          <button className="btn-primary rounded-xl px-4 py-2.5 text-sm inline-flex items-center gap-2">
-            <Send className="h-4 w-4" /> Send
+          <button disabled={search.isPending} className="btn-primary rounded-xl px-4 py-2.5 text-sm inline-flex items-center gap-2 disabled:opacity-50">
+            {search.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />} Send
           </button>
         </form>
       </div>

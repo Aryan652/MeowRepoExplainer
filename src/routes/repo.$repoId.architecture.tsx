@@ -1,35 +1,33 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { Maximize2, Filter, Download } from "lucide-react";
+import { createFileRoute, useParams } from "@tanstack/react-router";
+import { Maximize2, Filter, Download, Loader2 } from "lucide-react";
+import { useRepoArchitecture } from "@/hooks/useRepos";
 
 export const Route = createFileRoute("/repo/$repoId/architecture")({
   component: ArchitecturePage,
 });
 
-const nodes = [
-  { id: "client", label: "Client", x: 80, y: 60, color: "primary" },
-  { id: "gateway", label: "API Gateway", x: 280, y: 60 },
-  { id: "auth", label: "Auth Service", x: 480, y: 30 },
-  { id: "payments", label: "Payments", x: 480, y: 110 },
-  { id: "stripe", label: "Stripe", x: 680, y: 110, color: "accent" },
-  { id: "db", label: "Postgres", x: 480, y: 220 },
-  { id: "queue", label: "Job Queue", x: 280, y: 220 },
-  { id: "worker", label: "Worker", x: 80, y: 220 },
-];
-
-const edges: [string, string][] = [
-  ["client", "gateway"],
-  ["gateway", "auth"],
-  ["gateway", "payments"],
-  ["payments", "stripe"],
-  ["payments", "db"],
-  ["auth", "db"],
-  ["gateway", "queue"],
-  ["queue", "worker"],
-  ["worker", "db"],
-];
-
 function ArchitecturePage() {
-  const find = (id: string) => nodes.find((n) => n.id === id)!;
+  const { repoId } = useParams({ from: "/repo/$repoId" });
+  const { data: arch, isLoading, isError } = useRepoArchitecture(repoId);
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
+        <Loader2 className="h-6 w-6 animate-spin mb-4" />
+        <p>Loading architecture graph...</p>
+      </div>
+    );
+  }
+
+  if (isError || !arch) {
+    return (
+      <div className="py-20 text-center text-red-300">
+        Failed to load architecture graph.
+      </div>
+    );
+  }
+
+  const find = (id: string) => arch.nodes.find((n) => n.id === id)!;
   return (
     <div className="grid gap-5 lg:grid-cols-[1fr_280px]">
       <div className="glass-strong rounded-3xl p-5">
@@ -53,16 +51,18 @@ function ArchitecturePage() {
                 <stop offset="100%" stopColor="oklch(0.18 0.02 265)" />
               </radialGradient>
             </defs>
-            {edges.map(([a, b], i) => {
-              const A = find(a), B = find(b);
+            {arch.edges.map(([a, b], i) => {
+              const A = find(a);
+              const B = find(b);
+              if (!A || !B) return null;
               return (
                 <line key={i} x1={A.x + 60} y1={A.y + 20} x2={B.x + 60} y2={B.y + 20}
                       stroke="url(#edge)" strokeWidth="1.5" />
               );
             })}
-            {nodes.map((n) => (
+            {arch.nodes.map((n) => (
               <g key={n.id} transform={`translate(${n.x}, ${n.y})`}>
-                <rect width="120" height="40" rx="12" fill="url(#node)" stroke={n.color === "primary" ? "oklch(0.78 0.16 245)" : n.color === "accent" ? "oklch(0.72 0.18 305)" : "oklch(1 0 0 / 0.15)"} strokeWidth="1.5" />
+                <rect width="120" height="40" rx="12" fill="url(#node)" stroke={(n as any).color === "primary" ? "oklch(0.78 0.16 245)" : (n as any).color === "accent" ? "oklch(0.72 0.18 305)" : "oklch(1 0 0 / 0.15)"} strokeWidth="1.5" />
                 <text x="60" y="25" textAnchor="middle" fill="white" fontSize="12" fontFamily="ui-sans-serif">{n.label}</text>
               </g>
             ))}
@@ -73,12 +73,7 @@ function ArchitecturePage() {
       <aside className="glass-strong rounded-3xl p-5">
         <h3 className="font-display text-sm font-semibold">Layers</h3>
         <ul className="mt-3 space-y-2 text-sm">
-          {[
-            { name: "Transport", count: 14 },
-            { name: "Domain", count: 38 },
-            { name: "Persistence", count: 12 },
-            { name: "External", count: 4 },
-          ].map((l) => (
+          {arch.layers.map((l) => (
             <li key={l.name} className="glass rounded-xl px-3 py-2 flex items-center justify-between">
               <span>{l.name}</span>
               <span className="text-xs text-muted-foreground">{l.count}</span>
@@ -87,9 +82,9 @@ function ArchitecturePage() {
         </ul>
         <h3 className="mt-6 font-display text-sm font-semibold">Hot paths</h3>
         <ul className="mt-3 space-y-2 text-xs text-muted-foreground">
-          <li>POST /checkout → Payments → Stripe</li>
-          <li>POST /webhooks/stripe → Worker → DB</li>
-          <li>GET /me → Auth → DB</li>
+          {arch.hotPaths.map((path, i) => (
+            <li key={i}>{path}</li>
+          ))}
         </ul>
       </aside>
     </div>

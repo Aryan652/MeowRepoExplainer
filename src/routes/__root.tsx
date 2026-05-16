@@ -12,6 +12,7 @@ import appCss from "../styles.css?url";
 import { Nav } from "@/components/site/Nav";
 import { Footer } from "@/components/site/Footer";
 import { Aurora } from "@/components/site/Aurora";
+import { AuthProvider } from "@/lib/auth";
 
 function NotFoundComponent() {
   return (
@@ -88,12 +89,14 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   return (
     <QueryClientProvider client={queryClient}>
-      <Aurora />
-      <Nav />
-      <main className="relative">
-        <Outlet />
-      </main>
-      <Footer />
+      <AuthProvider>
+        <Aurora />
+        <Nav />
+        <main className="relative">
+          <Outlet />
+        </main>
+        <Footer />
+      </AuthProvider>
     </QueryClientProvider>
   );
 }
