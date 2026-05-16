@@ -63,12 +63,14 @@ function AnalyzePage() {
       // 2. Start Analysis Job
       const { jobId: newJobId } = await startAnalysis.mutateAsync({
         repoId: newRepoId,
+        githubUrl: url,
       });
 
       setJobId(newJobId);
     } catch (err) {
-      console.error(err);
-      alert("Failed to start analysis");
+      console.error("Analysis error:", err);
+      const errorMessage = err instanceof Error ? err.message : "Unknown error";
+      alert(`Failed to start analysis: ${errorMessage}`);
     }
   };
 

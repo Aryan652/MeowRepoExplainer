@@ -7,7 +7,7 @@ export const analysisKeys = {
 
 export function useStartAnalysis() {
   return useMutation({
-    mutationFn: (vars: { repoId: string }) => startAnalysis({ data: vars }),
+    mutationFn: (vars: { repoId: string; githubUrl: string }) => startAnalysis({ data: vars }),
   });
 }
 

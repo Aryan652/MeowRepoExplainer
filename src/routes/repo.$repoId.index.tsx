@@ -1,6 +1,7 @@
 import { createFileRoute, useParams } from "@tanstack/react-router";
-import { getRepo } from "@/lib/mock-data";
 import { Activity, FileCode, FlaskConical, AlertTriangle, GitBranch, Sparkles } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { getRepoById } from "@/lib/api/repos";
 
 export const Route = createFileRoute("/repo/$repoId/")({
   component: RepoOverview,
@@ -8,8 +9,19 @@ export const Route = createFileRoute("/repo/$repoId/")({
 
 function RepoOverview() {
   const { repoId } = useParams({ from: "/repo/$repoId/" });
-  const repo = getRepo(repoId);
-  if (!repo) return null;
+  
+  const { data: repo, isLoading } = useQuery({
+    queryKey: ["repo", repoId],
+    queryFn: () => getRepoById({ data: { id: repoId } }),
+  });
+  
+  if (isLoading) {
+    return <div className="text-center text-muted-foreground">Loading...</div>;
+  }
+  
+  if (!repo) {
+    return <div className="text-center text-muted-foreground">Repository not found</div>;
+  }
 
   return (
     <div className="grid gap-5 lg:grid-cols-3">

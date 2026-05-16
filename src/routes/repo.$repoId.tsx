@@ -1,7 +1,8 @@
 import { createFileRoute, Link, Outlet, useParams } from "@tanstack/react-router";
 import { ArrowLeft, MessageSquare, FileText, Network, AlertTriangle, LayoutDashboard } from "lucide-react";
-import { getRepo } from "@/lib/mock-data";
 import { useRequireAuth } from "@/hooks/useRequireAuth";
+import { useQuery } from "@tanstack/react-query";
+import { getRepoById } from "@/lib/api/repos";
 
 export const Route = createFileRoute("/repo/$repoId")({
   component: RepoLayout,
@@ -24,9 +25,30 @@ const tabs = [
 function RepoLayout() {
   const authed = useRequireAuth();
   const { repoId } = useParams({ from: "/repo/$repoId" });
-  const repo = getRepo(repoId);
+  
+  const { data: repo, isLoading } = useQuery({
+    queryKey: ["repo", repoId],
+    queryFn: () => getRepoById({ data: { id: repoId } }),
+  });
 
   if (!authed) return null;
+  
+  if (isLoading) {
+    return (
+      <div className="pt-40 text-center">
+        <p className="text-muted-foreground">Loading repository...</p>
+      </div>
+    );
+  }
+  
+  if (!repo) {
+    return (
+      <div className="pt-40 text-center">
+        <p className="text-muted-foreground">Repository not found.</p>
+        <Link to="/dashboard" className="btn-primary inline-block mt-4 rounded-full px-5 py-2 text-sm">Back to dashboard</Link>
+      </div>
+    );
+  }
 
   return (
     <div className="pt-28 pb-20 px-6">

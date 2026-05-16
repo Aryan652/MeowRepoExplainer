@@ -167,8 +167,26 @@ export const createRepo = createServerFn({ method: "POST" })
     }
 
     const { getDb } = await import("@/db/client");
-    const { repositories } = await import("@/db/schema");
+    const { repositories, users } = await import("@/db/schema");
+    const { eq } = await import("drizzle-orm");
     const db = getDb();
+
+    // Ensure user exists in database (for mock auth users)
+    const [existingUser] = await db
+      .select()
+      .from(users)
+      .where(eq(users.id, data.userId))
+      .limit(1);
+
+    if (!existingUser) {
+      // Create user if doesn't exist (happens with mock auth)
+      await db.insert(users).values({
+        id: data.userId,
+        name: "User",
+        email: `${data.userId}@repomind.local`,
+        provider: "email",
+      }).onConflictDoNothing();
+    }
 
     const id = `${data.org}-${data.name}`.toLowerCase().replace(/\s+/g, "-");
 

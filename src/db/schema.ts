@@ -100,6 +100,19 @@ export const codeEmbeddings = pgTable("code_embeddings", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// ─── Repository Documentation ───────────────────────────────────────────────────
+
+export const repositoryDocs = pgTable("repository_docs", {
+  id: text("id").primaryKey(),
+  repositoryId: text("repository_id")
+    .notNull()
+    .references(() => repositories.id, { onDelete: "cascade" }),
+  docType: text("doc_type").notNull(), // "readme", "api", "onboarding", "architecture"
+  title: text("title").notNull(),
+  content: text("content").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 // ─── Inferred Types ─────────────────────────────────────────────────────────────
 
 export type User = typeof users.$inferSelect;
@@ -109,3 +122,4 @@ export type NewRepository = typeof repositories.$inferInsert;
 export type AnalysisJob = typeof analysisJobs.$inferSelect;
 export type TechDebtItem = typeof techDebtItems.$inferSelect;
 export type CodeEmbedding = typeof codeEmbeddings.$inferSelect;
+export type RepositoryDoc = typeof repositoryDocs.$inferSelect;
