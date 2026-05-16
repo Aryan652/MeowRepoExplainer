@@ -49,4 +49,4 @@ run-setup.js
 # Database setup (keep in repo for reference)
 # setup-database.sql
 
-# Made with Bob
+.dev.vars
