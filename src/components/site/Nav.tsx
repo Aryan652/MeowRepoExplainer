@@ -6,6 +6,7 @@ const links = [
   { to: "/features", label: "Features" },
   { to: "/agents", label: "Agents" },
   { to: "/pricing", label: "Pricing" },
+  { to: "/dashboard", label: "App" },
 ] as const;
 
 export function Nav() {
@@ -35,7 +36,7 @@ export function Nav() {
           ))}
         </ul>
         <Link
-          to="/"
+          to="/signup"
           className="btn-primary rounded-full px-4 py-1.5 text-sm font-medium"
         >
           Try free
