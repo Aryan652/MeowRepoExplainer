@@ -9,19 +9,61 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SignupRouteImport } from './routes/signup'
+import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as PricingRouteImport } from './routes/pricing'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as FeaturesRouteImport } from './routes/features'
+import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as ContactRouteImport } from './routes/contact'
+import { Route as AnalyzeRouteImport } from './routes/analyze'
 import { Route as AgentsRouteImport } from './routes/agents'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as RepoRepoIdRouteImport } from './routes/repo.$repoId'
+import { Route as RepoRepoIdIndexRouteImport } from './routes/repo.$repoId.index'
+import { Route as RepoRepoIdDocsRouteImport } from './routes/repo.$repoId.docs'
+import { Route as RepoRepoIdDebtRouteImport } from './routes/repo.$repoId.debt'
+import { Route as RepoRepoIdChatRouteImport } from './routes/repo.$repoId.chat'
+import { Route as RepoRepoIdArchitectureRouteImport } from './routes/repo.$repoId.architecture'
 
+const SignupRoute = SignupRouteImport.update({
+  id: '/signup',
+  path: '/signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PricingRoute = PricingRouteImport.update({
   id: '/pricing',
   path: '/pricing',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const FeaturesRoute = FeaturesRouteImport.update({
   id: '/features',
   path: '/features',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardRoute = DashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ContactRoute = ContactRouteImport.update({
+  id: '/contact',
+  path: '/contact',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AnalyzeRoute = AnalyzeRouteImport.update({
+  id: '/analyze',
+  path: '/analyze',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AgentsRoute = AgentsRouteImport.update({
@@ -34,43 +76,177 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RepoRepoIdRoute = RepoRepoIdRouteImport.update({
+  id: '/repo/$repoId',
+  path: '/repo/$repoId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RepoRepoIdIndexRoute = RepoRepoIdIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => RepoRepoIdRoute,
+} as any)
+const RepoRepoIdDocsRoute = RepoRepoIdDocsRouteImport.update({
+  id: '/docs',
+  path: '/docs',
+  getParentRoute: () => RepoRepoIdRoute,
+} as any)
+const RepoRepoIdDebtRoute = RepoRepoIdDebtRouteImport.update({
+  id: '/debt',
+  path: '/debt',
+  getParentRoute: () => RepoRepoIdRoute,
+} as any)
+const RepoRepoIdChatRoute = RepoRepoIdChatRouteImport.update({
+  id: '/chat',
+  path: '/chat',
+  getParentRoute: () => RepoRepoIdRoute,
+} as any)
+const RepoRepoIdArchitectureRoute = RepoRepoIdArchitectureRouteImport.update({
+  id: '/architecture',
+  path: '/architecture',
+  getParentRoute: () => RepoRepoIdRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/agents': typeof AgentsRoute
+  '/analyze': typeof AnalyzeRoute
+  '/contact': typeof ContactRoute
+  '/dashboard': typeof DashboardRoute
   '/features': typeof FeaturesRoute
+  '/login': typeof LoginRoute
   '/pricing': typeof PricingRoute
+  '/settings': typeof SettingsRoute
+  '/signup': typeof SignupRoute
+  '/repo/$repoId': typeof RepoRepoIdRouteWithChildren
+  '/repo/$repoId/architecture': typeof RepoRepoIdArchitectureRoute
+  '/repo/$repoId/chat': typeof RepoRepoIdChatRoute
+  '/repo/$repoId/debt': typeof RepoRepoIdDebtRoute
+  '/repo/$repoId/docs': typeof RepoRepoIdDocsRoute
+  '/repo/$repoId/': typeof RepoRepoIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/agents': typeof AgentsRoute
+  '/analyze': typeof AnalyzeRoute
+  '/contact': typeof ContactRoute
+  '/dashboard': typeof DashboardRoute
   '/features': typeof FeaturesRoute
+  '/login': typeof LoginRoute
   '/pricing': typeof PricingRoute
+  '/settings': typeof SettingsRoute
+  '/signup': typeof SignupRoute
+  '/repo/$repoId/architecture': typeof RepoRepoIdArchitectureRoute
+  '/repo/$repoId/chat': typeof RepoRepoIdChatRoute
+  '/repo/$repoId/debt': typeof RepoRepoIdDebtRoute
+  '/repo/$repoId/docs': typeof RepoRepoIdDocsRoute
+  '/repo/$repoId': typeof RepoRepoIdIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/agents': typeof AgentsRoute
+  '/analyze': typeof AnalyzeRoute
+  '/contact': typeof ContactRoute
+  '/dashboard': typeof DashboardRoute
   '/features': typeof FeaturesRoute
+  '/login': typeof LoginRoute
   '/pricing': typeof PricingRoute
+  '/settings': typeof SettingsRoute
+  '/signup': typeof SignupRoute
+  '/repo/$repoId': typeof RepoRepoIdRouteWithChildren
+  '/repo/$repoId/architecture': typeof RepoRepoIdArchitectureRoute
+  '/repo/$repoId/chat': typeof RepoRepoIdChatRoute
+  '/repo/$repoId/debt': typeof RepoRepoIdDebtRoute
+  '/repo/$repoId/docs': typeof RepoRepoIdDocsRoute
+  '/repo/$repoId/': typeof RepoRepoIdIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/agents' | '/features' | '/pricing'
+  fullPaths:
+    | '/'
+    | '/agents'
+    | '/analyze'
+    | '/contact'
+    | '/dashboard'
+    | '/features'
+    | '/login'
+    | '/pricing'
+    | '/settings'
+    | '/signup'
+    | '/repo/$repoId'
+    | '/repo/$repoId/architecture'
+    | '/repo/$repoId/chat'
+    | '/repo/$repoId/debt'
+    | '/repo/$repoId/docs'
+    | '/repo/$repoId/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/agents' | '/features' | '/pricing'
-  id: '__root__' | '/' | '/agents' | '/features' | '/pricing'
+  to:
+    | '/'
+    | '/agents'
+    | '/analyze'
+    | '/contact'
+    | '/dashboard'
+    | '/features'
+    | '/login'
+    | '/pricing'
+    | '/settings'
+    | '/signup'
+    | '/repo/$repoId/architecture'
+    | '/repo/$repoId/chat'
+    | '/repo/$repoId/debt'
+    | '/repo/$repoId/docs'
+    | '/repo/$repoId'
+  id:
+    | '__root__'
+    | '/'
+    | '/agents'
+    | '/analyze'
+    | '/contact'
+    | '/dashboard'
+    | '/features'
+    | '/login'
+    | '/pricing'
+    | '/settings'
+    | '/signup'
+    | '/repo/$repoId'
+    | '/repo/$repoId/architecture'
+    | '/repo/$repoId/chat'
+    | '/repo/$repoId/debt'
+    | '/repo/$repoId/docs'
+    | '/repo/$repoId/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AgentsRoute: typeof AgentsRoute
+  AnalyzeRoute: typeof AnalyzeRoute
+  ContactRoute: typeof ContactRoute
+  DashboardRoute: typeof DashboardRoute
   FeaturesRoute: typeof FeaturesRoute
+  LoginRoute: typeof LoginRoute
   PricingRoute: typeof PricingRoute
+  SettingsRoute: typeof SettingsRoute
+  SignupRoute: typeof SignupRoute
+  RepoRepoIdRoute: typeof RepoRepoIdRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/signup': {
+      id: '/signup'
+      path: '/signup'
+      fullPath: '/signup'
+      preLoaderRoute: typeof SignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/pricing': {
       id: '/pricing'
       path: '/pricing'
@@ -78,11 +254,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PricingRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/features': {
       id: '/features'
       path: '/features'
       fullPath: '/features'
       preLoaderRoute: typeof FeaturesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/contact': {
+      id: '/contact'
+      path: '/contact'
+      fullPath: '/contact'
+      preLoaderRoute: typeof ContactRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/analyze': {
+      id: '/analyze'
+      path: '/analyze'
+      fullPath: '/analyze'
+      preLoaderRoute: typeof AnalyzeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/agents': {
@@ -99,14 +303,83 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/repo/$repoId': {
+      id: '/repo/$repoId'
+      path: '/repo/$repoId'
+      fullPath: '/repo/$repoId'
+      preLoaderRoute: typeof RepoRepoIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/repo/$repoId/': {
+      id: '/repo/$repoId/'
+      path: '/'
+      fullPath: '/repo/$repoId/'
+      preLoaderRoute: typeof RepoRepoIdIndexRouteImport
+      parentRoute: typeof RepoRepoIdRoute
+    }
+    '/repo/$repoId/docs': {
+      id: '/repo/$repoId/docs'
+      path: '/docs'
+      fullPath: '/repo/$repoId/docs'
+      preLoaderRoute: typeof RepoRepoIdDocsRouteImport
+      parentRoute: typeof RepoRepoIdRoute
+    }
+    '/repo/$repoId/debt': {
+      id: '/repo/$repoId/debt'
+      path: '/debt'
+      fullPath: '/repo/$repoId/debt'
+      preLoaderRoute: typeof RepoRepoIdDebtRouteImport
+      parentRoute: typeof RepoRepoIdRoute
+    }
+    '/repo/$repoId/chat': {
+      id: '/repo/$repoId/chat'
+      path: '/chat'
+      fullPath: '/repo/$repoId/chat'
+      preLoaderRoute: typeof RepoRepoIdChatRouteImport
+      parentRoute: typeof RepoRepoIdRoute
+    }
+    '/repo/$repoId/architecture': {
+      id: '/repo/$repoId/architecture'
+      path: '/architecture'
+      fullPath: '/repo/$repoId/architecture'
+      preLoaderRoute: typeof RepoRepoIdArchitectureRouteImport
+      parentRoute: typeof RepoRepoIdRoute
+    }
   }
 }
+
+interface RepoRepoIdRouteChildren {
+  RepoRepoIdArchitectureRoute: typeof RepoRepoIdArchitectureRoute
+  RepoRepoIdChatRoute: typeof RepoRepoIdChatRoute
+  RepoRepoIdDebtRoute: typeof RepoRepoIdDebtRoute
+  RepoRepoIdDocsRoute: typeof RepoRepoIdDocsRoute
+  RepoRepoIdIndexRoute: typeof RepoRepoIdIndexRoute
+}
+
+const RepoRepoIdRouteChildren: RepoRepoIdRouteChildren = {
+  RepoRepoIdArchitectureRoute: RepoRepoIdArchitectureRoute,
+  RepoRepoIdChatRoute: RepoRepoIdChatRoute,
+  RepoRepoIdDebtRoute: RepoRepoIdDebtRoute,
+  RepoRepoIdDocsRoute: RepoRepoIdDocsRoute,
+  RepoRepoIdIndexRoute: RepoRepoIdIndexRoute,
+}
+
+const RepoRepoIdRouteWithChildren = RepoRepoIdRoute._addFileChildren(
+  RepoRepoIdRouteChildren,
+)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AgentsRoute: AgentsRoute,
+  AnalyzeRoute: AnalyzeRoute,
+  ContactRoute: ContactRoute,
+  DashboardRoute: DashboardRoute,
   FeaturesRoute: FeaturesRoute,
+  LoginRoute: LoginRoute,
   PricingRoute: PricingRoute,
+  SettingsRoute: SettingsRoute,
+  SignupRoute: SignupRoute,
+  RepoRepoIdRoute: RepoRepoIdRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

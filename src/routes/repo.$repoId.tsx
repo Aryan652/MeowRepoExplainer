@@ -13,11 +13,11 @@ export const Route = createFileRoute("/repo/$repoId")({
 });
 
 const tabs = [
-  { to: "/repo/$repoId", label: "Overview", icon: LayoutDashboard, exact: true },
-  { to: "/repo/$repoId/chat", label: "Chat", icon: MessageSquare },
-  { to: "/repo/$repoId/docs", label: "Docs", icon: FileText },
-  { to: "/repo/$repoId/architecture", label: "Architecture", icon: Network },
-  { to: "/repo/$repoId/debt", label: "Tech debt", icon: AlertTriangle },
+  { to: "/repo/$repoId", label: "Overview", icon: LayoutDashboard, exact: true as boolean },
+  { to: "/repo/$repoId/chat", label: "Chat", icon: MessageSquare, exact: false as boolean },
+  { to: "/repo/$repoId/docs", label: "Docs", icon: FileText, exact: false as boolean },
+  { to: "/repo/$repoId/architecture", label: "Architecture", icon: Network, exact: false as boolean },
+  { to: "/repo/$repoId/debt", label: "Tech debt", icon: AlertTriangle, exact: false as boolean },
 ] as const;
 
 function RepoLayout() {
